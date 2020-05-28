@@ -1,0 +1,2 @@
+rootProject.name='Indecision'
+include ':app'

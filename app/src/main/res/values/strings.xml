@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Indecision</string>
+    <string name="add_new_task_label">Add new task</string>
+</resources>
