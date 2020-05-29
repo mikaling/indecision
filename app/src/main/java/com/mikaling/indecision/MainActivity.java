@@ -74,24 +74,24 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-//        unregisterReceiver(broadcastReceiver);
-//        Log.i(TAG, "Unregistered broadcast receiver");
+        unregisterReceiver(broadcastReceiver);
+        Log.i(TAG, "Unregistered broadcast receiver");
     }
 
     @Override
     protected void onStop() {
-//        try {
-//            unregisterReceiver(broadcastReceiver);
-//        } catch (Exception e) {
-//            // Receiver was probably stopped in onPause()
-//        }
+        try {
+            unregisterReceiver(broadcastReceiver);
+        } catch (Exception e) {
+            // Receiver was probably stopped in onPause()
+        }
         super.onStop();
     }
 
     @Override
     protected void onDestroy() {
-        stopService(new Intent(this, BroadcastService.class));
-        Log.i(TAG, "Stopped service");
+//        stopService(new Intent(this, BroadcastService.class));
+//        Log.i(TAG, "Stopped service");
         super.onDestroy();
     }
 

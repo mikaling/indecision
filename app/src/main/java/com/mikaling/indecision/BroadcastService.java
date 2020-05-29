@@ -24,11 +24,21 @@ public class BroadcastService extends Service {
     public void onCreate() {
         super.onCreate();
 
+        // Create notification
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_access_alarm_black_24dp)
+                .setContentTitle("Get busy!")
+                .setContentText("textContent")
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT);
+        Notification notification = builder.build();
+
         Log.i(TAG, "Starting timer...");
 
         cdt = new CountDownTimer(10000, 1000) {
             @Override
             public void onTick(long millisUntilFinished) {
+
+
 
                 Log.i(TAG, "Countdown seconds remaining: " + millisUntilFinished / 1000);
                 bi.putExtra("countdown", millisUntilFinished);
@@ -50,8 +60,7 @@ public class BroadcastService extends Service {
 
                 NotificationManagerCompat notificationManager = NotificationManagerCompat.from(getApplicationContext());
 
-                // Remove ongoing notification
-                notificationManager.cancel(12);
+
                 // Show notification when timer completes
                 // (notificationId is a unique int for each notification that you must define)
                 notificationManager.notify(13, builder.build());
@@ -60,13 +69,7 @@ public class BroadcastService extends Service {
             }
         }.start();
 
-        // Create notification
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setSmallIcon(R.drawable.ic_access_alarm_black_24dp)
-                .setContentTitle("Get busy!")
-                .setContentText("textContent")
-                .setPriority(NotificationCompat.PRIORITY_DEFAULT);
-        Notification notification = builder.build();
+
 
         // Start foreground service with ID of 12 and a specified notification as the ongoing notification
         startForeground(12, notification);
