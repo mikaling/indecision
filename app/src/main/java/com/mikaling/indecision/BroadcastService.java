@@ -3,6 +3,7 @@ package com.mikaling.indecision;
 import android.app.Notification;
 import android.app.Service;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.CountDownTimer;
 import android.os.IBinder;
 import android.util.Log;
@@ -67,6 +68,10 @@ public class BroadcastService extends Service {
 
                 bi.putExtra("finished", true);
                 sendBroadcast(bi);
+                SharedPreferences preferences = getApplicationContext().getSharedPreferences("prefs", 0);
+                SharedPreferences.Editor editor = preferences.edit();
+                editor.putBoolean("finished", true);
+                editor.commit();
                 stopForeground(true);
             }
         }.start();

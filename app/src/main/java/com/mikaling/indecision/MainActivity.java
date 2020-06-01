@@ -14,6 +14,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Build;
@@ -33,8 +34,10 @@ import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
 
+
     private SQLiteDatabase sqLiteDatabase;
     private TaskAdapter taskAdapter;
+    SharedPreferences preferences;
 
     public static final String TAG = "MainActivity";
     private static final String CHANNEL_ID = "12"; // Notification Channel ID
@@ -52,12 +55,18 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        preferences = getApplicationContext().getSharedPreferences("prefs", 0);
         TaskDBHelper taskDBHelper = new TaskDBHelper(this);
         sqLiteDatabase = taskDBHelper.getWritableDatabase();
 
         fab = findViewById(R.id.floatingActionButton);
         // Disable FAB clicks if there are no tasks
         disableButton();
+
+        timeRemaining = findViewById(R.id.timeRemaining);
+        chosenTask = findViewById(R.id.chosenTask);
+
+
 
         RecyclerView recyclerView = findViewById(R.id.recyclerview);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -73,12 +82,10 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
-                removeItem(viewHolder.itemView.getTag());
+                removeItem((long) viewHolder.itemView.getTag());
             }
         }).attachToRecyclerView(recyclerView);
 
-        timeRemaining = findViewById(R.id.timeRemaining);
-        chosenTask = findViewById(R.id.chosenTask);
         addNewTaskEditText = findViewById(R.id.addNewTaskEditText);
 
         addNewTask = findViewById(R.id.addNewTask);
@@ -115,9 +122,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void removeItem(Object id) {
-        Log.i(TAG, "ID = "+id);
-        id = (int) id;
+    private void removeItem(long id) {
         sqLiteDatabase.delete(TaskContract.TaskEntry.TABLE_NAME,
                 TaskContract.TaskEntry._ID + "=" + id,
                 null);
@@ -125,13 +130,13 @@ public class MainActivity extends AppCompatActivity {
         disableButton();
     }
 
-//    private void removeItem(int id) {
-//        sqLiteDatabase.delete(TaskContract.TaskEntry.TABLE_NAME,
-//                TaskContract.TaskEntry._ID + "=" + id,
-//                null);
-//        taskAdapter.swapCursor(getAllItems());
-//        disableButton();
-//    }
+    private void removeItem(int id) {
+        sqLiteDatabase.delete(TaskContract.TaskEntry.TABLE_NAME,
+                TaskContract.TaskEntry._ID + "=" + id,
+                null);
+        taskAdapter.swapCursor(getAllItems());
+        disableButton();
+    }
 
     private void addToDatabase() {
         // Add task to database and show in RecyclerView
@@ -167,7 +172,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (intent.getBooleanExtra("finished", false)) {
-                removeItem(chosenTask.getTag());
+                removeItem((int)chosenTask.getTag());
                 chosenTask.setText("");
             }
             Log.i(TAG, "received broadcast");
@@ -182,11 +187,29 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
         registerReceiver(broadcastReceiver, new IntentFilter(BroadcastService.COUNTDOWN_BR));
         Log.i(TAG, "Register broadcast receiver");
+
+        if (preferences.contains("chosenTask")) {
+            chosenTask.setText(preferences.getString("chosenTask", null));
+            chosenTask.setTag(preferences.getInt("chosenTaskId", 0));
+        }
+
+        if (preferences.getBoolean("finished", false)) {
+            removeItem((int) chosenTask.getTag());
+            chosenTask.setText("");
+        }
+
     }
 
     @Override
     protected void onPause() {
         super.onPause();
+
+
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putString("chosenTask", chosenTask.getText().toString());
+        editor.putInt("chosenTaskId", (int) chosenTask.getTag());
+        editor.commit();
+
         unregisterReceiver(broadcastReceiver);
         Log.i(TAG, "Unregistered broadcast receiver");
     }
@@ -198,15 +221,18 @@ public class MainActivity extends AppCompatActivity {
         } catch (Exception e) {
             // Receiver was probably stopped in onPause()
         }
+        Log.i(TAG, "stopped");
         super.onStop();
     }
 
     @Override
     protected void onDestroy() {
 //        stopService(new Intent(this, BroadcastService.class));
-//        Log.i(TAG, "Stopped service");
+        Log.i(TAG, "destroyed");
         super.onDestroy();
     }
+
+
 
     private void updateCountDownText(Intent intent) {
         if (intent.getExtras() != null) {
@@ -227,6 +253,10 @@ public class MainActivity extends AppCompatActivity {
         Log.i(TAG, "Started service");
 
         chooseRandomTask();
+
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putBoolean("finished", false);
+        editor.commit();
     }
 
     private void createNotificationChannel() {
