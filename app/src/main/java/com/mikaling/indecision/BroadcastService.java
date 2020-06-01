@@ -65,6 +65,8 @@ public class BroadcastService extends Service {
                 // (notificationId is a unique int for each notification that you must define)
                 notificationManager.notify(13, builder.build());
 
+                bi.putExtra("finished", true);
+                sendBroadcast(bi);
                 stopForeground(true);
             }
         }.start();
