@@ -8,7 +8,6 @@ import android.os.CountDownTimer;
 import android.os.IBinder;
 import android.util.Log;
 
-import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
@@ -18,6 +17,7 @@ public class BroadcastService extends Service {
     public static final String COUNTDOWN_BR = "com.mikaling.indecision.countdown_br";
     private static final String CHANNEL_ID = "12";
     Intent bi = new Intent(COUNTDOWN_BR);
+    private long millisInFuture;
 
     CountDownTimer cdt = null;
 
@@ -35,12 +35,11 @@ public class BroadcastService extends Service {
 
         Log.i(TAG, "Starting timer...");
 
-        cdt = new CountDownTimer(10000, 1000) {
+
+
+        cdt = new CountDownTimer(1800000, 1000) {
             @Override
             public void onTick(long millisUntilFinished) {
-
-
-
                 Log.i(TAG, "Countdown seconds remaining: " + millisUntilFinished / 1000);
                 bi.putExtra("countdown", millisUntilFinished);
                 sendBroadcast(bi);
@@ -92,6 +91,9 @@ public class BroadcastService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        millisInFuture = intent.getLongExtra("length", 10_000);
+//        millisInFuture = 10_000;
+        Log.i(TAG, "timer length service" + millisInFuture);
         return super.onStartCommand(intent, flags, startId);
     }
 

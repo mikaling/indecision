@@ -48,7 +48,6 @@ public class MainActivity extends AppCompatActivity {
     private FloatingActionButton fab;
     // Timer length in milliseconds
     private long milliseconds = 30000;
-    private long millisecondsLeft;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -117,7 +116,6 @@ public class MainActivity extends AppCompatActivity {
     private void disableButton() {
         Cursor cursor = getAllItems();
         if (cursor.getCount() == 0){
-            Log.i(TAG, "count = " + cursor.getCount());
             fab.setEnabled(false);
         }
     }
@@ -238,7 +236,7 @@ public class MainActivity extends AppCompatActivity {
         if (intent.getExtras() != null) {
             long millisUntilFinished = intent.getLongExtra("countdown", 0);
             int minutes = (int) (millisUntilFinished / 60000);
-            int seconds = (int) (millisUntilFinished / 1000);
+            int seconds = (int) ((millisUntilFinished /1000) % 60);
             String time = String.format("%02d:%02d", minutes, seconds);
             timeRemaining.setText(time);
             Log.i(TAG, "updated UI");
@@ -248,8 +246,19 @@ public class MainActivity extends AppCompatActivity {
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     public void startTimer(View view) {
-        stopService(new Intent(this, BroadcastService.class));
-        startForegroundService(new Intent(this, BroadcastService.class));
+        Intent serviceIntent = new Intent(this, BroadcastService.class);
+        Random random = new Random();
+        int randomMin = 10_000;
+        int randomMax = 60_000;
+        milliseconds = (long) random.nextInt(randomMax + 1 - randomMin) + randomMin;
+
+        long leftLimit = 10_000L;
+        long rightLimit = 60_000L;
+        milliseconds = leftLimit + (long) (Math.random() * (rightLimit - leftLimit));
+        Log.i(TAG, "timer length = " + milliseconds);
+        serviceIntent.putExtra("length", milliseconds);
+        stopService(serviceIntent);
+        startForegroundService(serviceIntent);
         Log.i(TAG, "Started service");
 
         chooseRandomTask();
@@ -302,9 +311,4 @@ public class MainActivity extends AppCompatActivity {
         chosenTask.setText(cursor1.getString(0));
         chosenTask.setTag(id);
     }
-
-    private void chooseRandomTime() {
-
-    }
-
 }
