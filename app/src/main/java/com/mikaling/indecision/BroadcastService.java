@@ -1,6 +1,7 @@
 package com.mikaling.indecision;
 
 import android.app.Notification;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -25,11 +26,14 @@ public class BroadcastService extends Service {
     public void onCreate() {
         super.onCreate();
 
+        Intent intent = new Intent(this, MainActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        final PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
         // Create notification
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_access_alarm_black_24dp)
                 .setContentTitle("Get busy!")
-                .setContentText("textContent")
+                .setContentIntent(pendingIntent)
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT);
         Notification notification = builder.build();
 
@@ -37,7 +41,7 @@ public class BroadcastService extends Service {
 
 
 
-        cdt = new CountDownTimer(1800000, 1000) {
+        cdt = new CountDownTimer(3000, 1000) {
             @Override
             public void onTick(long millisUntilFinished) {
                 Log.i(TAG, "Countdown seconds remaining: " + millisUntilFinished / 1000);
@@ -54,7 +58,7 @@ public class BroadcastService extends Service {
                 NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID)
                         .setSmallIcon(R.drawable.ic_access_alarm_black_24dp)
                         .setContentTitle("Time's up!")
-                        .setContentText("textContent")
+                        .setContentIntent(pendingIntent)
                         .setPriority(NotificationCompat.PRIORITY_DEFAULT);
                 Notification notification = builder.build();
 

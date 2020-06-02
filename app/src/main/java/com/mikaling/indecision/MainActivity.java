@@ -66,7 +66,6 @@ public class MainActivity extends AppCompatActivity {
         chosenTask = findViewById(R.id.chosenTask);
 
 
-
         RecyclerView recyclerView = findViewById(R.id.recyclerview);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         taskAdapter = new TaskAdapter(this, getAllItems());
@@ -115,7 +114,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void disableButton() {
         Cursor cursor = getAllItems();
-        if (cursor.getCount() == 0){
+        if (cursor.getCount() == 0) {
             fab.setEnabled(false);
         }
     }
@@ -170,7 +169,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (intent.getBooleanExtra("finished", false)) {
-                removeItem((int)chosenTask.getTag());
+                removeItem((int) chosenTask.getTag());
                 chosenTask.setText("");
             }
             Log.i(TAG, "received broadcast");
@@ -231,12 +230,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-
     private void updateCountDownText(Intent intent) {
         if (intent.getExtras() != null) {
             long millisUntilFinished = intent.getLongExtra("countdown", 0);
             int minutes = (int) (millisUntilFinished / 60000);
-            int seconds = (int) ((millisUntilFinished /1000) % 60);
+            int seconds = (int) ((millisUntilFinished / 1000) % 60);
             String time = String.format("%02d:%02d", minutes, seconds);
             timeRemaining.setText(time);
             Log.i(TAG, "updated UI");
@@ -286,29 +284,28 @@ public class MainActivity extends AppCompatActivity {
 
     private void chooseRandomTask() {
 
-        // Returns rows in descending order of date created, with first row having the largest id
-        Cursor cursor = getAllItems();
-        // Move cursor to first row to get largest ID
-        cursor.moveToFirst();
-        int randomMax = cursor.getInt(cursor.getColumnIndex(TaskContract.TaskEntry._ID));
-
-        // Move cursor to last row to get smallest ID
-        cursor.moveToLast();
-        int randomMin = cursor.getInt(cursor.getColumnIndex(TaskContract.TaskEntry._ID));
-        Random random = new Random();
-        int id = random.nextInt(randomMax + 1 - randomMin) + randomMin;
-
 
         TaskDBHelper taskDBHelper = new TaskDBHelper(this);
         sqLiteDatabase = taskDBHelper.getReadableDatabase();
         Cursor cursor1 = sqLiteDatabase.rawQuery(
                 "SELECT " + TaskContract.TaskEntry.COLUMN_NAME +
-                " FROM " + TaskContract.TaskEntry.TABLE_NAME + " WHERE " + TaskContract.TaskEntry._ID +
-                " = '" + id + "'", null);
-        cursor1.moveToFirst();
+                        ", " + TaskContract.TaskEntry._ID +
+                        " FROM " + TaskContract.TaskEntry.TABLE_NAME, null);
+
+        int randomMax = cursor1.getCount() - 1;
+        int randomMin = 0;
+        Random random = new Random();
+        int row = random.nextInt(randomMax + 1 - randomMin) + randomMin;
 
 
-        chosenTask.setText(cursor1.getString(0));
-        chosenTask.setTag(id);
+        if (cursor1.moveToPosition(row)) {
+
+            chosenTask.setText(cursor1.getString(0));
+
+            int id = cursor1.getInt(1);
+            chosenTask.setTag(id);
+        }
+
+
     }
 }

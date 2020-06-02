@@ -53,6 +53,7 @@
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
         android:onClick="startTimer"
+        app:backgroundTint="@color/colorAccent"
         android:src="@drawable/ic_play_arrow_black_24dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
