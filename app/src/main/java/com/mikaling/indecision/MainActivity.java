@@ -46,8 +46,6 @@ public class MainActivity extends AppCompatActivity {
     private TextInputLayout addNewTask;
     private TextInputEditText addNewTaskEditText;
     private FloatingActionButton fab;
-    // Timer length in milliseconds
-    private long milliseconds = 30000;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -106,15 +104,16 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-//        startService(new Intent(this, BroadcastService.class));
-//        Log.i(TAG, "Started service");
 
         createNotificationChannel();
     }
 
     private void disableButton() {
         Cursor cursor = getAllItems();
-        if (cursor.getCount() == 0) {
+        fab.setEnabled(true);
+        Intent i = getIntent();
+
+        if ((cursor.getCount() == 0) || !(i.getBooleanExtra("finished", false))) {
             fab.setEnabled(false);
         }
     }
@@ -137,7 +136,6 @@ public class MainActivity extends AppCompatActivity {
 
     private void addToDatabase() {
         // Add task to database and show in RecyclerView
-//        Toast.makeText(MainActivity.this, "End icon clicked", Toast.LENGTH_SHORT).show();
 
         if (addNewTaskEditText.getText().toString().trim().length() == 0) {
             return; // Do not add to database if EditText is empty
@@ -175,6 +173,10 @@ public class MainActivity extends AppCompatActivity {
             Log.i(TAG, "received broadcast");
             // Call method to update timer TetView when broadcasts are received
             updateCountDownText(intent);
+
+            if (preferences.getBoolean("finished", false)) {
+                fab.setEnabled(true);
+            }
         }
     };
 
@@ -193,6 +195,7 @@ public class MainActivity extends AppCompatActivity {
         if (preferences.getBoolean("finished", false)) {
             removeItem((int) chosenTask.getTag());
             chosenTask.setText("");
+            fab.setEnabled(true);
         }
 
     }
@@ -233,9 +236,10 @@ public class MainActivity extends AppCompatActivity {
     private void updateCountDownText(Intent intent) {
         if (intent.getExtras() != null) {
             long millisUntilFinished = intent.getLongExtra("countdown", 0);
-            int minutes = (int) (millisUntilFinished / 60000);
+            int hours = (int) (millisUntilFinished / 3_600_000);
+            int minutes = (int) ((millisUntilFinished / 60_000) % 60);
             int seconds = (int) ((millisUntilFinished / 1000) % 60);
-            String time = String.format("%02d:%02d", minutes, seconds);
+            String time = String.format("%01d:%02d:%02d", hours, minutes, seconds);
             timeRemaining.setText(time);
             Log.i(TAG, "updated UI");
         }
@@ -245,25 +249,18 @@ public class MainActivity extends AppCompatActivity {
     @RequiresApi(api = Build.VERSION_CODES.O)
     public void startTimer(View view) {
         Intent serviceIntent = new Intent(this, BroadcastService.class);
-        Random random = new Random();
-        int randomMin = 10_000;
-        int randomMax = 60_000;
-        milliseconds = (long) random.nextInt(randomMax + 1 - randomMin) + randomMin;
 
-        long leftLimit = 10_000L;
-        long rightLimit = 60_000L;
-        milliseconds = leftLimit + (long) (Math.random() * (rightLimit - leftLimit));
-        Log.i(TAG, "timer length = " + milliseconds);
-        serviceIntent.putExtra("length", milliseconds);
+        chooseRandomTask();
+        serviceIntent.putExtra("chosenTask", chosenTask.getText());
         stopService(serviceIntent);
         startForegroundService(serviceIntent);
         Log.i(TAG, "Started service");
 
-        chooseRandomTask();
-
         SharedPreferences.Editor editor = preferences.edit();
         editor.putBoolean("finished", false);
         editor.commit();
+
+        fab.setEnabled(false);
     }
 
     private void createNotificationChannel() {
@@ -284,7 +281,6 @@ public class MainActivity extends AppCompatActivity {
 
     private void chooseRandomTask() {
 
-
         TaskDBHelper taskDBHelper = new TaskDBHelper(this);
         sqLiteDatabase = taskDBHelper.getReadableDatabase();
         Cursor cursor1 = sqLiteDatabase.rawQuery(
@@ -299,9 +295,7 @@ public class MainActivity extends AppCompatActivity {
 
 
         if (cursor1.moveToPosition(row)) {
-
             chosenTask.setText(cursor1.getString(0));
-
             int id = cursor1.getInt(1);
             chosenTask.setTag(id);
         }
