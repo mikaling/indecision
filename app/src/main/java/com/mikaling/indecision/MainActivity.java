@@ -113,7 +113,11 @@ public class MainActivity extends AppCompatActivity {
         fab.setEnabled(true);
         Intent i = getIntent();
 
-        if ((cursor.getCount() == 0) || !(i.getBooleanExtra("finished", false))) {
+//        if (preferences.getBoolean("finished", false)) {
+//            fab.setEnabled(true);
+//        }
+
+        if ((cursor.getCount() == 0) || !(preferences.getBoolean("finished", false))) {
             fab.setEnabled(false);
         }
     }
@@ -148,8 +152,10 @@ public class MainActivity extends AppCompatActivity {
         taskAdapter.swapCursor(getAllItems());
 
         addNewTaskEditText.getText().clear();
-        fab.setEnabled(true);
+//        fab.setEnabled(true);
+            disableButton();
     }
+
 
     private Cursor getAllItems() {
         return sqLiteDatabase.query(
@@ -174,9 +180,9 @@ public class MainActivity extends AppCompatActivity {
             // Call method to update timer TetView when broadcasts are received
             updateCountDownText(intent);
 
-            if (preferences.getBoolean("finished", false)) {
-                fab.setEnabled(true);
-            }
+//            if (preferences.getBoolean("finished", false)) {
+//                fab.setEnabled(true);
+//            }
         }
     };
 
@@ -197,6 +203,8 @@ public class MainActivity extends AppCompatActivity {
             chosenTask.setText("");
             fab.setEnabled(true);
         }
+
+        disableButton();
 
     }
 
